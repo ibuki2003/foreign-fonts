@@ -1,31 +1,35 @@
 #!/bin/bash
+set -e
+
 cd $(dirname $0)
 
 SRCDIR=./orig
 DSTDIR=./conv
 
-remove_unneeded() {
-  mkdir -p "$DSTDIR"
-  for f in $(find $DSTDIR -type f); do
-    fn="${f#$DSTDIR/}"
-    if [ ! -f "$SRCDIR/$fn" ]; then
-      echo "removing $fn"
-      sleep 1
-      rm -f "$f"
-    fi
-  done
-}
-
 process_files() {
   for f in $(find $SRCDIR -type f); do
     fn="${f#$SRCDIR/}"
     d="$DSTDIR/$fn"
+    needconv=0
 
-    if [ "$f" -nt "$DSTDIR/$fn" ]; then
+    ext="${fn##*.}"
+    if [[ $ext == "fon" ]]; then
+      # skip: not supported by fontforge
+      continue
+    elif [[ $ext == "dfont" ]]; then
+      # convert to ttf
+      needconv=1
+      d="${d%.*}.ttf"
+    fi
+
+    if [ "$f" -nt $d ]; then
       mkdir -p "$DSTDIR/$(dirname "$fn")"
-      echo "$f" #"$DSTDIR/$fn"
+      echo "$f"
 
       if showttf "$f" | grep -q 'Bitmap Image Size'; then
+        needconv=1
+      fi
+      if [[ $needconv == 1 ]]; then
         python removebitmap.py "$f" "$d"
       else
         cp "$f" "$d"
@@ -34,5 +38,4 @@ process_files() {
   done
 }
 
-remove_unneeded
 process_files

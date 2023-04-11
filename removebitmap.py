@@ -86,6 +86,9 @@ def main(argvs):
         familyNames = fontforge.fontsInFile(srcFile)
         i = 0
 
+        if len(familyNames) == 0:
+            familyNames = [""]
+
         new_files = []
 
         # Break a TTC to some TTFs.
@@ -101,7 +104,12 @@ def main(argvs):
             tmpTTF = "%s%da.ttf" % (tmpPrefix, i)
 
             # Open font
-            font = fontforge.open(openName)
+            try:
+                font = fontforge.open(openName, 32)
+            except Exception as e:
+                print(e)
+                return
+            print(font)
 
             # Edit font
             font.encoding = 'UnicodeFull'
@@ -112,9 +120,15 @@ def main(argvs):
 
             # ttf へ一時的に保存する。
             font.generate(tempDir + "/" + tmpTTF, flags=flags)
-            new_files.append(tempDir + "/" + tmpTTF)
+            if os.path.exists(tempDir + "/" + tmpTTF):
+                new_files.append(tempDir + "/" + tmpTTF)
             font.close()
             i += 1
+
+        if len(new_files) == 0:
+            print("error: empty")
+            return
+
 
         # set variables.
         newTTCname = fontFSName
