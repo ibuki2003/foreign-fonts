@@ -1,0 +1,31 @@
+#!env fontforge -script
+
+fonts = FontsInFile($1)
+n = SizeOf(fonts)
+
+if (n == 1)
+  Open($1, 1)
+
+  Print($2)
+  Generate($2, "");
+else
+  i = 0
+
+  while ( i < n )
+    Open($1 + "(" + i + ")", 1)
+
+    index = ToString(i + 1)
+    if (i < 9)
+        index = "0" + index
+    endif
+
+    ext = ".ttf"
+    if ($order == 3)
+      ext = ".otf"
+    endif
+
+    Generate($2:r + "-" + index + ext, "")
+
+    i++
+  endloop
+endif
